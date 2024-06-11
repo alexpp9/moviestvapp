@@ -2,6 +2,24 @@
 const global = {
   currentPage: window.location.pathname,
 };
+// Function to display popular movies
+async function displayPopularMovies() {
+  const results = await fetchAPIData('movie/popular');
+
+  console.log(results);
+}
+
+// Fetch data from TMDB API
+async function fetchAPIData(endpoint) {
+  const API_KEY = '068f8219a4b8cc950124cd0ff57fab2f';
+  const API_URL = 'https://api.themoviedb.org/3/';
+
+  const response = await fetch(
+    `${API_URL}${endpoint}?api_key=${API_KEY}&language=en-US`
+  );
+  const data = await response.json();
+  return data;
+}
 
 // Highlight Active Link
 function highlightActiveLink() {
@@ -19,7 +37,8 @@ function init() {
   switch (global.currentPage) {
     case '/':
     case '/index.html':
-      console.log('Home');
+      // Execute display popular movies
+      displayPopularMovies();
       break;
     case '/shows.html':
       console.log('Shows');
