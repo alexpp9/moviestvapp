@@ -256,12 +256,66 @@ async function search() {
   global.search.term = urlParams.get('search-term');
   // First make sure there's something there
   if (global.search.term !== '' && global.search.term !== null) {
-    const results = await searchAPIData();
-    console.log(results);
+    // Take what one needs from results
+    // Useful to not repeat the same request from the API, deconstruct
+    const { results, total_pages, page } = await searchAPIData();
+    // Check to see if there are results
+    if (results.length === 0) {
+      // Show alert
+      showAlert('There are no results to display');
+      return;
+    }
+    // Display results
+    displaySearchResults(results);
+    // Clear input after search
+    document.querySelector('#search-term').value = '';
   } else {
     // show alert success/fail
-    showAlert('Search failed');
+    showAlert('Please enter a search term');
   }
+}
+
+// Display search results
+function displaySearchResults(results) {
+  results.forEach((result) => {
+    const div = document.createElement('div');
+    div.classList.add('card');
+    div.innerHTML = `
+            <a href="${global.search.type}-details.html?id=${result.id}">
+            
+            ${
+              result.poster_path
+                ? `<img
+                  src="https://image.tmdb.org/t/p/w500${result.poster_path}"
+                  class="card-img-top"
+                  alt="${
+                    global.search.type === 'movie' ? result.title : result.name
+                  }"
+                />`
+                : `<img
+                  src="images/no-image.jpg"
+                  class="card-img-top"
+                  alt="${
+                    global.search.type === 'movie' ? result.title : result.name
+                  }"
+                />`
+            }
+          </a>
+          <div class="card-body">
+            <h5 class="card-title">${
+              global.search.type === 'movie' ? result.title : result.name
+            }</h5>
+            <p class="card-text">
+              <small class="text-muted">Release: ${
+                global.search.type === 'movie'
+                  ? result.release_date
+                  : result.first_air_date
+              }</small>
+            </p>
+          </div>
+    `;
+    document.querySelector('#search-results').appendChild(div);
+  });
 }
 
 // Display Slider
@@ -371,7 +425,8 @@ function highlightActiveLink() {
 }
 
 // Show Alert
-function showAlert(message, className) {
+// the default className is set to error; for success, pass <success> class in execute code;
+function showAlert(message, className = 'error') {
   const alertEl = document.createElement('div');
   // Add the <alert> class which is common
   // And the one which shows it either as success/failt
