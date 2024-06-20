@@ -1,6 +1,17 @@
 // Routing the pages
 const global = {
   currentPage: window.location.pathname,
+  // The global,default state
+  search: {
+    term: '',
+    type: '',
+    page: 1,
+    totalPages: 1,
+  },
+  api: {
+    apiKey: '068f8219a4b8cc950124cd0ff57fab2f',
+    apiURL: 'https://api.themoviedb.org/3/',
+  },
 };
 // Function to display popular movies
 async function displayPopularMovies() {
@@ -234,6 +245,25 @@ function displayBackgroundImage(type, backgroundPath) {
   }
 }
 
+// Search movies
+async function search() {
+  // Get data from URL
+  const queryString = window.location.search;
+  // The the params only
+  const urlParams = new URLSearchParams(queryString);
+  // .get("---") is from the radio buttons <name> attribute
+  global.search.type = urlParams.get('type');
+  global.search.term = urlParams.get('search-term');
+  // First make sure there's something there
+  if (global.search.term !== '' && global.search.term !== null) {
+    const results = await searchAPIData();
+    console.log(results);
+  } else {
+    // show alert success/fail
+    showAlert('Search failed');
+  }
+}
+
 // Display Slider
 async function displaySlider() {
   const { results } = await fetchAPIData('movie/now_playing');
@@ -293,13 +323,28 @@ function initSwiper() {
 
 // Fetch data from TMDB API
 async function fetchAPIData(endpoint) {
-  const API_KEY = '068f8219a4b8cc950124cd0ff57fab2f';
-  const API_URL = 'https://api.themoviedb.org/3/';
+  const API_KEY = global.api.apiKey;
+  const API_URL = global.api.apiURL;
 
   //   Show spinner before making the request
   showSpinner();
   const response = await fetch(
     `${API_URL}${endpoint}?api_key=${API_KEY}&language=en-US`
+  );
+  const data = await response.json();
+  // Hide spinner
+  hideSpinner();
+  return data;
+}
+// Make Request to Search
+async function searchAPIData() {
+  const API_KEY = global.api.apiKey;
+  const API_URL = global.api.apiURL;
+
+  //   Show spinner before making the request
+  showSpinner();
+  const response = await fetch(
+    `${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}`
   );
   const data = await response.json();
   // Hide spinner
@@ -323,6 +368,25 @@ function highlightActiveLink() {
       link.classList.add('active');
     }
   });
+}
+
+// Show Alert
+function showAlert(message, className) {
+  const alertEl = document.createElement('div');
+  // Add the <alert> class which is common
+  // And the one which shows it either as success/failt
+  alertEl.classList.add('alert', className);
+  // Add text to div
+  alertEl.appendChild(document.createTextNode(message));
+  document.querySelector('#alert').appendChild(alertEl);
+
+  // To remove the alert message after a period of time
+  removeAlert(alertEl);
+}
+
+// Remove alert
+function removeAlert(element) {
+  setTimeout(() => element.remove(), 3000);
 }
 
 // Add commas to numbers
@@ -352,7 +416,7 @@ function init() {
       displayTVShowDetails();
       break;
     case '/search.html':
-      console.log('Search');
+      search();
       break;
   }
 
